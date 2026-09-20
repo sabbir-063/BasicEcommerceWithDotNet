@@ -2,6 +2,7 @@ info.txt
 **/.env
 **/.env.*
 !.env.example
+**/Properties/launchSettings.json
 front/node_modules/
 front/dist/
 front/playwright-report/
@@ -15,3 +16,4 @@ back/.vs/
 .DS_Store
 .nuget/
 .docker-config/
+**/launchsettings.json
