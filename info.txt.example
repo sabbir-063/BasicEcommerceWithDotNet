@@ -1,0 +1,47 @@
+# Copy this file to info.txt in the repository root and fill development values.
+# Do not commit info.txt.
+# KEY=VALUE format only. Avoid surrounding quotes unless the value itself requires them.
+
+# ---------- Application ----------
+APP_NAME=BasicCommerce
+APP_ENV=development
+APP_CURRENCY=BDT
+APP_TIMEZONE=Asia/Dhaka
+
+# ---------- Local URLs ----------
+FRONTEND_DEV_URL=http://localhost:5173
+BACKEND_DEV_URL=http://localhost:8080
+
+# ---------- Authentication ----------
+# Generate a long random value. Minimum recommended length: 64 random characters.
+JWT_SECRET=REPLACE_ME_WITH_LONG_RANDOM_SECRET
+JWT_ISSUER=BasicCommerce.Api
+JWT_AUDIENCE=BasicCommerce.Frontend
+JWT_ACCESS_TOKEN_MINUTES=60
+
+# Initial development admin. Codex seeds this account only if it does not already exist.
+DEV_ADMIN_NAME=Development Admin
+DEV_ADMIN_EMAIL=admin@example.com
+DEV_ADMIN_PASSWORD=REPLACE_ME_WITH_STRONG_DEV_PASSWORD
+
+# ---------- Neon PostgreSQL ----------
+# Paste both URLs from Neon. Use the pooled endpoint for normal application runtime.
+# Use the direct endpoint for EF Core migrations and administrative operations when appropriate.
+NEON_DATABASE_URL_POOLED=postgresql://USER:PASSWORD@POOLER_HOST/DATABASE?sslmode=require
+NEON_DATABASE_URL_DIRECT=postgresql://USER:PASSWORD@DIRECT_HOST/DATABASE?sslmode=require
+
+# ---------- Cloudinary ----------
+CLOUDINARY_CLOUD_NAME=REPLACE_ME
+CLOUDINARY_API_KEY=REPLACE_ME
+CLOUDINARY_API_SECRET=REPLACE_ME
+CLOUDINARY_FOLDER=ecommerce-dev
+
+# ---------- Optional development behavior ----------
+SEED_DEMO_DATA=true
+SEED_DEMO_IMAGE_ASSETS=true
+LOG_LEVEL=Information
+
+# ---------- Production placeholders ----------
+# Leave these blank during development. Production values should be created/rotated before deployment.
+PROD_FRONTEND_URL=
+PROD_BACKEND_URL=

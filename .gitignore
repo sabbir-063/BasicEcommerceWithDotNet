@@ -1,0 +1,17 @@
+info.txt
+**/.env
+**/.env.*
+!.env.example
+front/node_modules/
+front/dist/
+front/playwright-report/
+front/test-results/
+back/**/bin/
+back/**/obj/
+back/.vs/
+*.user
+*.suo
+*.log
+.DS_Store
+.nuget/
+.docker-config/
