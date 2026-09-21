@@ -7,7 +7,7 @@ Browser
   |
   | HTTPS
   v
-React/Vite frontend (Vercel)
+React/Vite frontend (Render Docker Web Service)
   |
   | HTTPS JSON REST API
   v
@@ -59,9 +59,7 @@ Neon PostgreSQL          Cloudinary
 |   `-- Dockerfile
 |
 |-- docs/
-|-- templates/
 |-- info.txt
-|-- docker-compose.yml
 `-- README.md
 ```
 

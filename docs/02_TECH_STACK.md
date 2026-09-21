@@ -85,6 +85,6 @@ Use:
 
 ## Docker
 - backend: multi-stage .NET SDK -> ASP.NET runtime image;
-- frontend: multi-stage Node build -> Nginx image for Docker validation/local container run;
-- Vercel production deployment still builds frontend from source rather than using the Docker image unless explicitly changed;
-- Render backend deployment uses backend Dockerfile.
+- frontend: multi-stage Node build -> Node `serve` runtime image;
+- both images deploy as independent Render Docker Web Services;
+- both services honor Render's platform-provided `PORT`.

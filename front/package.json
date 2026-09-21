@@ -12,21 +12,21 @@
     "e2e": "playwright test"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "latest",
     "react": "latest",
     "react-dom": "latest",
     "react-router-dom": "latest",
-    "typescript": "latest",
-    "vite": "latest",
-    "zod": "latest"
+    "serve": "^14.2.6"
   },
   "devDependencies": {
     "@playwright/test": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "@vitejs/plugin-react": "latest",
     "eslint": "latest",
     "jsdom": "latest",
     "prettier": "^3.9.8",
+    "typescript": "latest",
+    "vite": "latest",
     "vitest": "latest"
   }
 }

@@ -19,7 +19,7 @@ function useEffect(effect: () => unknown, dependencies: React.DependencyList) {
   }, dependencies);
 }
 
-const API = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+const API = import.meta.env.VITE_API_BASE_URL || "http://localhost:5284/api";
 type User = {
   id: string;
   name: string;

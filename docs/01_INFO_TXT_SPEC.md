@@ -52,7 +52,7 @@ APP_ENV=development
 APP_CURRENCY=BDT
 APP_TIMEZONE=Asia/Dhaka
 FRONTEND_DEV_URL=http://localhost:5173
-BACKEND_DEV_URL=http://localhost:8080
+BACKEND_DEV_URL=http://localhost:5284
 JWT_ISSUER=BasicCommerce.Api
 JWT_AUDIENCE=BasicCommerce.Frontend
 JWT_ACCESS_TOKEN_MINUTES=60
@@ -62,7 +62,7 @@ LOG_LEVEL=Information
 ```
 
 ## Values not required yet
-Do not require Vercel, Render, custom-domain, or production DB credentials to build the local application.
+Do not require Render or production DB credentials to build the local application.
 
 Before production deployment, request/create a new production set:
 - production Neon database/branch credentials;
@@ -71,7 +71,7 @@ Before production deployment, request/create a new production set:
 - production admin password;
 - production frontend URL;
 - production backend URL;
-- optionally Vercel/Render deployment tokens only if automated CLI deployment is explicitly requested.
+- optionally a Render deployment token only if automated CLI deployment is explicitly requested.
 
 ## Secret-handling protocol for Codex
 
@@ -90,7 +90,7 @@ Codex may generate:
 
 ### `front/.env.local`
 ```text
-VITE_API_BASE_URL=http://localhost:8080/api
+VITE_API_BASE_URL=http://localhost:5284/api
 VITE_APP_NAME=BasicCommerce
 VITE_CURRENCY=BDT
 ```
@@ -101,7 +101,7 @@ Only public browser-safe values go here.
 Use .NET configuration sources. For local development, one of these is acceptable:
 - `dotnet user-secrets`;
 - ignored `back/.env` loaded only by local tooling;
-- shell/Docker Compose environment variables.
+- shell or Render environment variables.
 
 Recommended backend variable mapping:
 
@@ -120,7 +120,7 @@ Cors__AllowedOrigins__0=<FRONTEND_DEV_URL>
 Seed__AdminName=<DEV_ADMIN_NAME>
 Seed__AdminEmail=<DEV_ADMIN_EMAIL>
 Seed__AdminPassword=<DEV_ADMIN_PASSWORD>
-Seed__DemoData=<SEED_DEMO_DATA>
+Seed__DemoData=<SEED_DEMO_DATA> # development only
 ```
 
 ## `info.txt` parser rules

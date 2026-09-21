@@ -38,7 +38,7 @@ Validate:
 The signing secret must be backend-only.
 
 ## Frontend token storage tradeoff
-For this MVP, bearer access token may be stored in `sessionStorage` so the frontend and backend can run on separate Vercel/Render domains without relying on cross-site cookies.
+For this MVP, bearer access token may be stored in `sessionStorage` so the frontend and backend can run on separate Render domains without relying on cross-site cookies.
 
 Rules:
 - no refresh token;
@@ -66,7 +66,7 @@ Development allowed origin:
 - exact `FRONTEND_DEV_URL`.
 
 Production:
-- exact Vercel/custom frontend origin(s).
+- exact Render/custom frontend origin.
 
 Do not use `AllowAnyOrigin` together with privileged APIs in production.
 

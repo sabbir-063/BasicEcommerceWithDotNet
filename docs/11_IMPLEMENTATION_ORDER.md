@@ -254,8 +254,7 @@ Admin progresses an order Pending -> Confirmed -> Shipped -> Delivered.
 
 - build backend image;
 - build frontend image;
-- run compose;
-- repeat core browser flow against containers;
+- repeat the core browser flow against the images or deployed services;
 - verify secrets are runtime-injected, not image-baked.
 
 ## Phase 14 - Deployment readiness only
@@ -263,8 +262,7 @@ Admin progresses an order Pending -> Confirmed -> Shipped -> Delivered.
 Do not deploy unless explicitly instructed.
 
 Prepare:
-- Vercel settings guide;
-- Render settings guide;
+- Render settings for both Docker services;
 - production env checklist;
 - migration command/procedure;
 - health check path;

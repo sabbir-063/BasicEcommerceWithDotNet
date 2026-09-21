@@ -45,12 +45,6 @@ Cloudinary API secret must not be exposed in public client code.
 
 Render web services must listen on an externally reachable interface (`0.0.0.0`) and should honor the `PORT` environment variable.
 
-## Vercel
-- Environment variables overview/settings: https://vercel.com/docs/environment-variables
-- Vite React template: https://vercel.com/templates/template/vite-react
-
-Use deployment environment variables for public frontend configuration; remember Vite public env values are bundled client-side.
-
 ## Unsplash
 - License/terms: https://unsplash.com/terms
 - Help on commercial/personal project use: https://help.unsplash.com/en/articles/2612315-can-i-use-unsplash-images-for-personal-or-commercial-projects

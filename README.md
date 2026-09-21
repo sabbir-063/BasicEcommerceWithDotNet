@@ -1,100 +1,101 @@
 # BasicCommerce
 
-BasicCommerce is a full-stack, single-store e-commerce MVP with a React/Vite frontend, ASP.NET Core API, PostgreSQL cart/order persistence, Cloudinary-backed product images, JWT authentication, customer/admin roles, and Cash on Delivery checkout.
+BasicCommerce is a React/Vite storefront with an ASP.NET Core API, PostgreSQL, Cloudinary image storage, JWT authentication, customer/admin roles, and Cash on Delivery checkout.
 
-## Repository
+## Project structure
 
-- `front/` — React, TypeScript, Vite, responsive customer/admin UI, Vitest and Playwright
-- `back/` — layered ASP.NET Core solution, EF Core/Npgsql, JWT, Cloudinary, xUnit
-- `docs/` — product, architecture, security, testing, and deployment specifications
-- `docker-compose.yml` — local frontend/backend container orchestration
+- `front/` — React, TypeScript, Vite, and the frontend Docker image
+- `back/` — ASP.NET Core API, EF Core migrations, and the backend Docker image
+- `docs/` — architecture, API, testing, and deployment notes
 
-The local host currently has .NET 9 and Node 22 installed, so the verified local project targets `net9.0`; the code and Docker structure are ready to move to the documented .NET 10/Node 24 baseline when those toolchains are installed.
-
-## Configuration
-
-Never commit `info.txt`, `back/.env`, `.env.local`, JWT secrets, database credentials, admin passwords, or Cloudinary API secrets.
-
-Copy `back/.env.example` to `back/.env` and supply development values. The frontend only needs browser-safe values:
-
-```env
-VITE_API_BASE_URL=http://localhost:8080/api
-VITE_APP_NAME=BasicCommerce
-VITE_CURRENCY=BDT
-```
-
-Required backend variables are documented in `back/.env.example`. Neon PostgreSQL URI values must be converted to an Npgsql key/value connection string when necessary.
+Production deployment uses two independent Render Docker Web Services. Docker Compose, Nginx, Vercel configuration, and a local database container are not required.
 
 ## Local development
 
 Backend:
 
 ```powershell
-dotnet restore back/BasicCommerce.sln --configfile back/NuGet.Config
-dotnet build back/BasicCommerce.sln
-dotnet test back/BasicCommerce.sln
+$env:ConnectionStrings__Default="Host=...;Port=5432;Database=...;Username=...;Password=...;SSL Mode=Require"
+$env:Jwt__Secret="..."
 dotnet run --project back/src/BasicCommerce.Api
 ```
+
+The local backend URL is `http://localhost:5284`.
 
 Frontend:
 
 ```powershell
 cd front
-npm install
-npm run lint
-npm run typecheck
-npm test
-npm run build
+npm ci
 npm run dev
 ```
 
-Default development URLs are frontend `http://localhost:5173`, API `http://localhost:5284` when using the checked-in launch profile, Swagger `http://localhost:5284/swagger`, liveness `/health/live`, and database readiness `/health/ready`.
+The local frontend URL is `http://localhost:5173`. It calls `http://localhost:5284/api` unless `VITE_API_BASE_URL` overrides it.
 
-## Database migrations
+## Render deployment
 
-The initial migration is under `back/src/BasicCommerce.Infrastructure/Migrations`.
+### Backend service
 
-```powershell
-dotnet tool restore
-$env:ConnectionStrings__Migration="Host=...;Port=5432;Database=...;Username=...;Password=...;SSL Mode=Require"
-dotnet tool run dotnet-ef database update --project back/src/BasicCommerce.Infrastructure --startup-project back/src/BasicCommerce.Api
+Create a Render Web Service with:
+
+```text
+Language: Docker
+Root Directory: back
+Dockerfile Path: ./Dockerfile
+Docker Build Context: .
+Health Check Path: /health/live
 ```
 
-Use a disposable PostgreSQL database for automated destructive/reset tests. Never point test reset commands at the provided development Neon database.
+Set these environment variables:
 
-## Browser tests
-
-Start the API and frontend, then provide the development admin values only as process environment variables:
-
-```powershell
-cd front
-$env:E2E_ADMIN_EMAIL="..."
-$env:E2E_ADMIN_PASSWORD="..."
-npm run e2e
+```env
+ASPNETCORE_ENVIRONMENT=Production
+ConnectionStrings__Default=Host=...;Port=5432;Database=...;Username=...;Password=...;SSL Mode=Require
+Jwt__Secret=...
+Jwt__Issuer=BasicCommerce.Api
+Jwt__Audience=BasicCommerce.Frontend
+Jwt__AccessTokenMinutes=60
+Cloudinary__CloudName=...
+Cloudinary__ApiKey=...
+Cloudinary__ApiSecret=...
+Cloudinary__Folder=ecommerce-dev
+Cors__AllowedOrigins__0=https://YOUR-FRONTEND-SERVICE.onrender.com
 ```
 
-The core suite covers catalog search, registration/login, PostgreSQL cart persistence through refresh, COD checkout, order history/details, and admin authorization/navigation.
+`ConnectionStrings__Default` is one environment variable containing the complete database connection string. Separate host, database, username, and password variables are not needed. Use an Npgsql/ADO.NET connection string, not a raw `postgresql://` URI.
 
-## Docker
+Render supplies `PORT`; do not configure it manually. In Production the API applies existing EF Core migrations and does not seed an admin, categories, or products.
 
-Create ignored `back/.env` from the example, then:
+### Frontend service
 
-```powershell
-docker compose build
-docker compose up
+After the backend URL is available, create a second Render Web Service with:
+
+```text
+Language: Docker
+Root Directory: front
+Dockerfile Path: ./Dockerfile
+Docker Build Context: .
+Health Check Path: /
 ```
 
-The frontend image serves the Vite SPA with Nginx; the backend image exposes port 8080. Backend secrets are injected at runtime and are not build arguments or image layers.
+Set one environment variable:
 
-## Deployment readiness
+```env
+VITE_API_BASE_URL=https://YOUR-BACKEND-SERVICE.onrender.com/api
+```
 
-- Vercel: deploy `front/`, set only `VITE_API_BASE_URL`, `VITE_APP_NAME`, and `VITE_CURRENCY`; `vercel.json` provides SPA fallback.
-- Render: deploy `back/Dockerfile`, set `PORT` plus the backend environment values, and use `/health/live` as the health path.
-- Neon: use pooled runtime and direct migration connections as appropriate.
-- Cloudinary: keep the API secret backend-only and use a separate production folder/environment.
+This is a public build-time value. Never add database, JWT, Cloudinary secret, or admin credentials to the frontend service.
 
-Production deployment has intentionally not been performed. Before deployment, supply fresh production Neon, Cloudinary, JWT, admin, and final frontend/backend URL values as listed in `docs/22_PRODUCTION_VALUE_ROTATION.md`.
+After the frontend URL is final, set that exact origin in the backend's `Cors__AllowedOrigins__0` and redeploy the backend.
 
-## Security notes
+## Database and production behavior
 
-Passwords use ASP.NET Core `PasswordHasher`; prices, totals, roles, stock, and status transitions are server-authoritative. Checkout and cancellation use serializable PostgreSQL transactions. Customer order/cart queries derive ownership from JWT claims. Product and category deletion is soft-disable. Errors use Problem Details, uploads are type/size checked, and CORS is configured to exact origins.
+- The application uses the external PostgreSQL database configured by `ConnectionStrings__Default`.
+- Production startup applies migrations but does not create seed records.
+- Existing users, products, carts, and orders remain in the database.
+- Product images are stored in Cloudinary, not in the container filesystem.
+- Render's filesystem can therefore remain ephemeral.
+
+## Secrets
+
+Never commit `info.txt`, `.env` files, database credentials, JWT secrets, Cloudinary API secrets, or admin passwords. `info.txt` is only a local reference for configuring Render.

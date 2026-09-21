@@ -10,7 +10,7 @@ APP_TIMEZONE=Asia/Dhaka
 
 # ---------- Local URLs ----------
 FRONTEND_DEV_URL=http://localhost:5173
-BACKEND_DEV_URL=http://localhost:8080
+BACKEND_DEV_URL=http://localhost:5284
 
 # ---------- Authentication ----------
 # Generate a long random value. Minimum recommended length: 64 random characters.
@@ -40,8 +40,3 @@ CLOUDINARY_FOLDER=ecommerce-dev
 SEED_DEMO_DATA=true
 SEED_DEMO_IMAGE_ASSETS=true
 LOG_LEVEL=Information
-
-# ---------- Production placeholders ----------
-# Leave these blank during development. Production values should be created/rotated before deployment.
-PROD_FRONTEND_URL=
-PROD_BACKEND_URL=
