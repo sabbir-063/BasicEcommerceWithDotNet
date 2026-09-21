@@ -40,7 +40,13 @@ app.UseExceptionHandler(); app.UseCors(); if (app.Environment.IsDevelopment()) {
 app.UseAuthentication(); app.UseAuthorization();
 app.MapHealthChecks("/health/live");
 app.MapGet("/health/ready", async (AppDbContext db) => await db.Database.CanConnectAsync() ? Results.Ok(new { status = "ready" }) : Results.StatusCode(503));
-using (var scope = app.Services.CreateScope()) { var db = scope.ServiceProvider.GetRequiredService<AppDbContext>(); if (app.Environment.IsDevelopment()) { await db.Database.EnsureCreatedAsync(); await SeedAsync(db, scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>(), builder.Configuration); } else await db.Database.MigrateAsync(); }
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+    if (app.Environment.IsDevelopment())
+        await SeedAsync(db, scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>(), builder.Configuration);
+}
 
 app.MapPost("/api/auth/register", async (RegisterRequest req, AppDbContext db, IPasswordHasher<User> hasher) => { if (string.IsNullOrWhiteSpace(req.Name) || string.IsNullOrWhiteSpace(req.Email) || req.Password.Length < 8) return Problem(400, "Validation error", "Name, email and an 8+ character password are required.", "VALIDATION_ERROR"); var email = req.Email.Trim().ToLowerInvariant(); if (await db.Users.AnyAsync(x => x.Email == email)) return Problem(409, "Email already registered", "Choose a different email.", "EMAIL_ALREADY_EXISTS"); var u = new User { Name = req.Name.Trim(), Email = email, Phone = req.Phone?.Trim() }; u.PasswordHash = hasher.HashPassword(u, req.Password); db.Users.Add(u); await db.SaveChangesAsync(); return Results.Created("/api/auth/me", UserDto(u)); });
 app.MapPost("/api/auth/login", async (LoginRequest req, AppDbContext db, IPasswordHasher<User> hasher) => { var u = await db.Users.SingleOrDefaultAsync(x => x.Email == req.Email.Trim().ToLowerInvariant()); if (u is null || !u.IsActive || hasher.VerifyHashedPassword(u, u.PasswordHash, req.Password) == PasswordVerificationResult.Failed) return Problem(401, "Invalid credentials", "Email or password is incorrect.", "INVALID_CREDENTIALS"); var now = DateTime.UtcNow; var expires = now.AddMinutes(tokenMinutes); var claims = new[] { new Claim(JwtRegisteredClaimNames.Sub, u.Id.ToString()), new Claim(ClaimTypes.NameIdentifier, u.Id.ToString()), new Claim(ClaimTypes.Email, u.Email), new Claim(ClaimTypes.Role, u.Role.ToString()), new Claim(ClaimTypes.Name, u.Name) }; var token = new JwtSecurityToken(jwtIssuer, jwtAudience, claims, now, expires, new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)), SecurityAlgorithms.HmacSha256)); return Results.Ok(new { accessToken = new JwtSecurityTokenHandler().WriteToken(token), expiresAt = expires, user = UserDto(u) }); });

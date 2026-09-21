@@ -98,7 +98,8 @@ Cors__AllowedOrigins__0=https://first.example.com,https://second.example.com
 ## Database and production behavior
 
 - The application uses the external PostgreSQL database configured by `ConnectionStrings__Default`.
-- Production startup applies migrations but does not create seed records.
+- Every backend startup applies only pending EF Core migrations; already-recorded migrations are skipped.
+- Development runs the idempotent demo seeder after migrations, while Production never creates seed records.
 - Existing users, products, carts, and orders remain in the database.
 - Product images are stored in Cloudinary, not in the container filesystem.
 - Render's filesystem can therefore remain ephemeral.

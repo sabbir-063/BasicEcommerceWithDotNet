@@ -19,4 +19,4 @@ The frontend receives only `VITE_API_BASE_URL` during its Docker build. The back
 
 `ConnectionStrings__Default` contains the complete Npgsql connection string. PostgreSQL host, port, database, username, and password do not need separate variables.
 
-Production startup applies EF Core migrations and does not execute development seed data.
+Every backend startup applies only pending EF Core migrations. Development then runs the idempotent demo seeder; Production never executes it.
