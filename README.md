@@ -15,12 +15,12 @@ Production deployment uses two independent Render Docker Web Services. Docker Co
 Backend:
 
 ```powershell
-$env:ConnectionStrings__Default="Host=...;Port=5432;Database=...;Username=...;Password=...;SSL Mode=Require"
-$env:Jwt__Secret="..."
+Copy-Item back/.env.example back/.env
+# Fill back/.env with local values, then run:
 dotnet run --project back/src/BasicCommerce.Api
 ```
 
-The local backend URL is `http://localhost:5284`.
+The API automatically loads `back/.env` for local runs without overwriting variables already supplied by the shell or hosting platform. The file is excluded from Git and Docker images. The local backend URL is `http://localhost:5284`.
 
 Frontend:
 

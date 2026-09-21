@@ -11,6 +11,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
+var localEnvFile = FindLocalEnvFile();
+if (localEnvFile is not null) LoadDotEnv(localEnvFile);
+
 var builder = WebApplication.CreateBuilder(args);
 if (int.TryParse(Environment.GetEnvironmentVariable("PORT"), out var renderPort)) builder.WebHost.UseUrls($"http://0.0.0.0:{renderPort}");
 builder.Services.AddEndpointsApiExplorer();
@@ -97,6 +100,37 @@ static object UserDto(User u) => new { id = u.Id, name = u.Name, email = u.Email
 static object CategoryDto(Category c) => new { id = c.Id, name = c.Name, slug = c.Slug, isActive = c.IsActive };
 static object ProductDto(Product p) => new { id = p.Id, categoryId = p.CategoryId, categoryName = p.Category?.Name, name = p.Name, slug = p.Slug, description = p.Description, price = p.Price, stockQuantity = p.StockQuantity, imageUrl = p.ImageUrl, imageAltText = p.ImageAltText, isActive = p.IsActive };
 static object OrderDto(Order o) => new { id = o.Id, orderNumber = o.OrderNumber, customerName = o.CustomerName, phone = o.Phone, shippingAddress = o.ShippingAddress, status = o.Status.ToString(), paymentMethod = o.PaymentMethod.ToString(), totalAmount = o.TotalAmount, createdAt = o.CreatedAt, items = o.Items.Select(i => new { id = i.Id, productId = i.ProductId, productName = i.ProductName, unitPrice = i.UnitPrice, quantity = i.Quantity, lineTotal = i.LineTotal }) };
+static string? FindLocalEnvFile()
+{
+    var current = Directory.GetCurrentDirectory();
+    foreach (var candidate in new[] { Path.Combine(current, ".env"), Path.Combine(current, "back", ".env") })
+        if (File.Exists(candidate)) return candidate;
+
+    for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
+        if (File.Exists(Path.Combine(directory.FullName, "BasicCommerce.sln")))
+        {
+            var candidate = Path.Combine(directory.FullName, ".env");
+            return File.Exists(candidate) ? candidate : null;
+        }
+
+    return null;
+}
+static void LoadDotEnv(string path)
+{
+    foreach (var rawLine in File.ReadLines(path))
+    {
+        var line = rawLine.Trim();
+        if (line.Length == 0 || line.StartsWith('#')) continue;
+        var separator = line.IndexOf('=');
+        if (separator <= 0) continue;
+        var key = line[..separator].Trim();
+        var value = line[(separator + 1)..].Trim();
+        if (value.Length >= 2 && ((value[0] == '"' && value[^1] == '"') || (value[0] == '\'' && value[^1] == '\'')))
+            value = value[1..^1];
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(key)))
+            Environment.SetEnvironmentVariable(key, value);
+    }
+}
 static async Task SeedAsync(AppDbContext db, IPasswordHasher<User> hasher, IConfiguration config) { var email = config["Seed:AdminEmail"] ?? Environment.GetEnvironmentVariable("Seed__AdminEmail"); var password = config["Seed:AdminPassword"] ?? Environment.GetEnvironmentVariable("Seed__AdminPassword"); if (!string.IsNullOrWhiteSpace(email) && !string.IsNullOrWhiteSpace(password) && !await db.Users.AnyAsync(x => x.Email == email.ToLowerInvariant())) { var a = new User { Name = config["Seed:AdminName"] ?? Environment.GetEnvironmentVariable("Seed__AdminName") ?? "Development Admin", Email = email.ToLowerInvariant(), Role = UserRole.Admin }; a.PasswordHash = hasher.HashPassword(a, password); db.Users.Add(a); } foreach (var n in new[] { "Electronics", "Accessories", "Home & Living", "Personal Care" }) { var slug = Slug(n); if (!await db.Categories.AnyAsync(x => x.Slug == slug)) db.Categories.Add(new Category { Name = n, Slug = slug }); } await db.SaveChangesAsync(); if (await db.Products.AnyAsync()) return; var cats = await db.Categories.ToDictionaryAsync(x => x.Slug); foreach (var (name, cat, price, stock) in new[] { ("Wireless Headphones", "electronics", 3499m, 12), ("Portable Bluetooth Speaker", "electronics", 2499m, 8), ("Everyday Backpack", "accessories", 1890m, 15), ("Minimal Wrist Watch", "accessories", 5990m, 3), ("Modern Desk Lamp", "home-&-living", 1290m, 10), ("Ceramic Coffee Mug", "home-&-living", 890m, 20), ("Daily Skin Care Set", "personal-care", 1590m, 7), ("Travel Toiletry Kit", "personal-care", 990m, 0) }) db.Products.Add(new Product { CategoryId = cats[cat].Id, Name = name, Slug = Slug(name), Description = $"Thoughtfully designed {name.ToLowerInvariant()} for everyday use.", Price = price, StockQuantity = stock }); await db.SaveChangesAsync(); }
 
 public record RegisterRequest(string Name, string Email, string Password, string? Phone);
