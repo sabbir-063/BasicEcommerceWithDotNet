@@ -29,8 +29,12 @@ var jwtAudience = builder.Configuration["Jwt:Audience"] ?? Environment.GetEnviro
 var tokenMinutes = int.TryParse(builder.Configuration["Jwt:AccessTokenMinutes"] ?? Environment.GetEnvironmentVariable("Jwt__AccessTokenMinutes"), out var tm) ? tm : 60;
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o => o.TokenValidationParameters = new TokenValidationParameters { ValidateIssuer = true, ValidateAudience = true, ValidateLifetime = true, ValidateIssuerSigningKey = true, ValidIssuer = jwtIssuer, ValidAudience = jwtAudience, IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)), ClockSkew = TimeSpan.FromSeconds(30) });
 builder.Services.AddAuthorization(o => o.AddPolicy("Admin", p => p.RequireRole("Admin")));
-var origin = Environment.GetEnvironmentVariable("Cors__AllowedOrigins__0") ?? "http://localhost:5173";
-builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.WithOrigins(origin).AllowAnyHeader().AllowAnyMethod()));
+var origins = (Environment.GetEnvironmentVariable("Cors__AllowedOrigins__0") ?? "http://localhost:5173")
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+    .Select(origin => origin.TrimEnd('/'))
+    .Distinct(StringComparer.OrdinalIgnoreCase)
+    .ToArray();
+builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod()));
 var app = builder.Build();
 app.UseExceptionHandler(); app.UseCors(); if (app.Environment.IsDevelopment()) { app.UseSwagger(); app.UseSwaggerUI(); }
 app.UseAuthentication(); app.UseAuthorization();

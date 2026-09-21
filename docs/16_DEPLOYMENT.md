@@ -27,6 +27,12 @@ Cloudinary__Folder=...
 Cors__AllowedOrigins__0=https://YOUR-FRONTEND-SERVICE.onrender.com
 ```
 
+The same variable accepts multiple comma-separated origins when both a Render URL and a custom domain are needed:
+
+```text
+Cors__AllowedOrigins__0=https://YOUR-FRONTEND.onrender.com,https://YOUR-CUSTOM-DOMAIN.com
+```
+
 Do not configure `PORT`; Render provides it. Production startup applies migrations but does not seed data.
 
 ## Frontend

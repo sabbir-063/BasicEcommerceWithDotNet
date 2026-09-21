@@ -89,6 +89,12 @@ This is a public build-time value. Never add database, JWT, Cloudinary secret, o
 
 After the frontend URL is final, set that exact origin in the backend's `Cors__AllowedOrigins__0` and redeploy the backend.
 
+To allow multiple frontend origins, keep the same variable name and separate the origins with commas:
+
+```env
+Cors__AllowedOrigins__0=https://first.example.com,https://second.example.com
+```
+
 ## Database and production behavior
 
 - The application uses the external PostgreSQL database configured by `ConnectionStrings__Default`.
