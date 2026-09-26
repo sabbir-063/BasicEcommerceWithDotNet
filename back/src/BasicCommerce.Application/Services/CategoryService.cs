@@ -38,8 +38,8 @@ public class CategoryService : ICategoryService
     public async Task<CategoryDto> CreateCategoryAsync(CategoryRequest request, CancellationToken ct = default)
     {
         var name = request.Name.Trim();
-        if (name.Length < 2)
-            throw new ValidationException("Category name must be at least two characters.");
+        if (name.Length < 2 || name.Length > 100)
+            throw new ValidationException("Category name must be between 2 and 100 characters.");
 
         var slug = Slug(name);
         if (await _db.Categories.AnyAsync(x => x.Slug == slug, ct))
@@ -58,8 +58,8 @@ public class CategoryService : ICategoryService
         if (c is null) throw new NotFoundException("Category not found.");
 
         var name = request.Name.Trim();
-        if (name.Length < 2)
-            throw new ValidationException("Category name must be at least two characters.");
+        if (name.Length < 2 || name.Length > 100)
+            throw new ValidationException("Category name must be between 2 and 100 characters.");
 
         var slug = Slug(name);
         if (await _db.Categories.AnyAsync(x => x.Slug == slug && x.Id != id, ct))

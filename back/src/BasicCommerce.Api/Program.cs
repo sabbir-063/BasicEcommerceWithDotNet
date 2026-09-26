@@ -62,6 +62,37 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)), 
             ClockSkew = TimeSpan.FromSeconds(30) 
         };
+        
+        o.Events = new JwtBearerEvents
+        {
+            OnChallenge = async context =>
+            {
+                context.HandleResponse();
+                context.Response.StatusCode = 401;
+                context.Response.ContentType = "application/problem+json";
+                var pd = new Microsoft.AspNetCore.Mvc.ProblemDetails
+                {
+                    Status = 401,
+                    Title = "Unauthorized",
+                    Detail = "You must be authenticated to access this resource.",
+                    Extensions = { ["code"] = "UNAUTHORIZED" }
+                };
+                await context.Response.WriteAsJsonAsync(pd);
+            },
+            OnForbidden = async context =>
+            {
+                context.Response.StatusCode = 403;
+                context.Response.ContentType = "application/problem+json";
+                var pd = new Microsoft.AspNetCore.Mvc.ProblemDetails
+                {
+                    Status = 403,
+                    Title = "Forbidden",
+                    Detail = "You do not have permission to access this resource.",
+                    Extensions = { ["code"] = "FORBIDDEN" }
+                };
+                await context.Response.WriteAsJsonAsync(pd);
+            }
+        };
     });
 builder.Services.AddAuthorization(o => o.AddPolicy("Admin", p => p.RequireRole("Admin")));
 var origins = (Environment.GetEnvironmentVariable("Cors__AllowedOrigins__0") ?? "http://localhost:5173")

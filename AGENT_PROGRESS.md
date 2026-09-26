@@ -44,12 +44,12 @@ This document acts as the central source of truth for AI agents working on this 
 - [x] Implement Application Services (Auth, Category, Product, Cart, Checkout, Dashboard).
 - [x] Group endpoints by feature modules (Minimal APIs).
 
-### ⏳ Phase 4 & 5: Error Handling & Database Integrity
+### ✅ Phase 4 & 5: Error Handling & Database Integrity
 - **Branch:** `feature/phase-4-5-data-integrity`
-- [ ] Implement robust server validation (email, password, limits, unique states).
-- [ ] Centralize Exception Mapping to RFC 7807 Problem Details (400, 401, 403, 404, 409, 500).
-- [ ] Baseline EF Migrations safely.
-- [ ] Add Database Constraints (prices, stock, order totals, atomic stock deductions, missing indexes).
+- [x] Implement robust server validation (email, password, limits, unique states).
+- [x] Centralize Exception Mapping to RFC 7807 Problem Details (400, 401, 403, 404, 409, 500).
+- [x] Baseline EF Migrations safely.
+- [x] Add Database Constraints (prices, stock, order totals, atomic stock deductions, missing indexes).
 
 ### ⏳ Phase 6 & 7: Frontend Refactor & Tailwind
 - **Branch:** `feature/phase-6-7-frontend-refactor`

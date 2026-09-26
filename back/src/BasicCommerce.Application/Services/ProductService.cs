@@ -94,8 +94,12 @@ public class ProductService : IProductService
 
     public async Task<ProductDto> CreateProductAsync(ProductRequest request, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(request.Name) || request.Price < 0 || request.StockQuantity < 0) 
-            throw new ValidationException("Name, nonnegative price and stock are required.");
+        if (string.IsNullOrWhiteSpace(request.Name) || request.Name.Length > 200)
+            throw new ValidationException("Product name must be provided and under 200 characters.", "VALIDATION_ERROR");
+        if (request.Price < 0)
+            throw new ValidationException("Product price cannot be negative.", "VALIDATION_ERROR");
+        if (request.StockQuantity < 0)
+            throw new ValidationException("Product stock cannot be negative.", "VALIDATION_ERROR");
             
         if (await _db.Categories.FindAsync(new object[] { request.CategoryId }, ct) is null) 
             throw new ValidationException("Category not found.");
@@ -125,8 +129,12 @@ public class ProductService : IProductService
         var p = await _db.Products.FindAsync(new object[] { id }, ct);
         if (p is null) throw new NotFoundException("Product not found.");
         
-        if (string.IsNullOrWhiteSpace(request.Name) || request.Price < 0 || request.StockQuantity < 0) 
-            throw new ValidationException("Name, nonnegative price and stock are required.");
+        if (string.IsNullOrWhiteSpace(request.Name) || request.Name.Length > 200)
+            throw new ValidationException("Product name must be provided and under 200 characters.", "VALIDATION_ERROR");
+        if (request.Price < 0)
+            throw new ValidationException("Product price cannot be negative.", "VALIDATION_ERROR");
+        if (request.StockQuantity < 0)
+            throw new ValidationException("Product stock cannot be negative.", "VALIDATION_ERROR");
             
         if (await _db.Categories.FindAsync(new object[] { request.CategoryId }, ct) is null) 
             throw new ValidationException("Category not found.");

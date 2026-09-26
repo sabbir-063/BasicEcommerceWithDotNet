@@ -22,8 +22,14 @@ public class AuthService : IAuthService
 
     public async Task<UserDto> RegisterAsync(RegisterRequest request, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.Email) || request.Password.Length < 8)
-            throw new ValidationException("Name, email and an 8+ character password are required.");
+        if (string.IsNullOrWhiteSpace(request.Name) || request.Name.Length > 100)
+            throw new ValidationException("Name must be provided and under 100 characters.", "VALIDATION_ERROR");
+            
+        if (string.IsNullOrWhiteSpace(request.Email) || !request.Email.Contains('@') || request.Email.Length > 255)
+            throw new ValidationException("A valid email must be provided.", "VALIDATION_ERROR");
+            
+        if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 8 || request.Password.Length > 100)
+            throw new ValidationException("Password must be between 8 and 100 characters.", "VALIDATION_ERROR");
 
         var email = request.Email.Trim().ToLowerInvariant();
         if (await _db.Users.AnyAsync(x => x.Email == email, ct))
@@ -64,8 +70,8 @@ public class AuthService : IAuthService
         var u = await _db.Users.SingleOrDefaultAsync(x => x.Id == userId, ct);
         if (u is null) throw new UnauthorizedException("Sign in is required.", "INVALID_CREDENTIALS");
         
-        if (string.IsNullOrWhiteSpace(request.Name))
-            throw new ValidationException("Name is required.");
+        if (string.IsNullOrWhiteSpace(request.Name) || request.Name.Length > 100)
+            throw new ValidationException("Name must be provided and under 100 characters.", "VALIDATION_ERROR");
             
         u.Name = request.Name.Trim();
         u.Phone = request.Phone?.Trim();
@@ -79,8 +85,11 @@ public class AuthService : IAuthService
         var u = await _db.Users.SingleOrDefaultAsync(x => x.Id == userId, ct);
         if (u is null) throw new UnauthorizedException("Sign in is required.", "INVALID_CREDENTIALS");
         
-        if (_hasher.VerifyHashedPassword(u, u.PasswordHash, request.CurrentPassword) == PasswordVerificationResult.Failed || request.NewPassword.Length < 8)
-            throw new ValidationException("Password requirements were not met.");
+        if (string.IsNullOrWhiteSpace(request.NewPassword) || request.NewPassword.Length < 8 || request.NewPassword.Length > 100)
+            throw new ValidationException("New password must be between 8 and 100 characters.", "VALIDATION_ERROR");
+            
+        if (_hasher.VerifyHashedPassword(u, u.PasswordHash, request.CurrentPassword) == PasswordVerificationResult.Failed)
+            throw new ValidationException("Current password is incorrect.", "VALIDATION_ERROR");
             
         u.PasswordHash = _hasher.HashPassword(u, request.NewPassword);
         await _db.SaveChangesAsync(ct);

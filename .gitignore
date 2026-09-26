@@ -17,3 +17,5 @@ back/.vs/
 .nuget/
 .docker-config/
 **/launchsettings.json
+
+baseliner/
