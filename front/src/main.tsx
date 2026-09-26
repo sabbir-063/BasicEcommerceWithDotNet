@@ -6,12 +6,12 @@ import {
   Navigate,
   Route,
   Routes,
-  useLocation,
   useNavigate,
   useParams,
   useSearchParams,
 } from "react-router-dom";
 import "./styles.css";
+import { api } from "./api/client";
 
 function useEffect(effect: () => unknown, dependencies: React.DependencyList) {
   reactUseEffect(() => {
@@ -19,7 +19,6 @@ function useEffect(effect: () => unknown, dependencies: React.DependencyList) {
   }, dependencies);
 }
 
-const API = import.meta.env.VITE_API_BASE_URL || "http://localhost:5284/api";
 type User = {
   id: string;
   name: string;
@@ -81,39 +80,6 @@ type Page<T> = {
   totalItems: number;
   totalPages: number;
 };
-class ApiError extends Error {
-  constructor(
-    public status: number,
-    public code?: string,
-    message = "Request failed",
-  ) {
-    super(message);
-  }
-}
-async function api<T>(path: string, init: RequestInit = {}) {
-  const token = sessionStorage.getItem("token");
-  const headers = new Headers(init.headers);
-  if (!(init.body instanceof FormData))
-    headers.set("Content-Type", "application/json");
-  if (token) headers.set("Authorization", `Bearer ${token}`);
-  let res: Response;
-  try {
-    res = await fetch(`${API}${path}`, { ...init, headers });
-  } catch {
-    throw new ApiError(0, undefined, "Network error. Please try again.");
-  }
-  const text = await res.text();
-  const data = text ? JSON.parse(text) : undefined;
-  if (!res.ok) {
-    if (res.status === 401) sessionStorage.removeItem("token");
-    throw new ApiError(
-      res.status,
-      data?.code,
-      data?.detail || data?.title || "Request failed",
-    );
-  }
-  return data as T;
-}
 const money = (v: number) =>
   new Intl.NumberFormat("en-BD", {
     style: "currency",
@@ -1113,9 +1079,9 @@ function AdminProducts() {
             <span>{p.name}</span>
             <span>{p.categoryName}</span>
             <span>{money(p.price)}</span>
-              <span>{p.stockQuantity} stock</span>
-              <span>{p.isActive ? "Active" : "Disabled"}</span>
-              <Link to={`/admin/products/${p.id}/edit`}>Edit</Link>
+            <span>{p.stockQuantity} stock</span>
+            <span>{p.isActive ? "Active" : "Disabled"}</span>
+            <Link to={`/admin/products/${p.id}/edit`}>Edit</Link>
           </div>
         ))}
       </div>
@@ -1154,7 +1120,7 @@ function AdminProductForm() {
         }),
       );
     }
-  }, []);
+  }, [id]);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -1174,20 +1140,30 @@ function AdminProductForm() {
   };
   const uploadImage = async (file?: File) => {
     if (!file) return;
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
-      setMsg('Choose a JPG, PNG, or WEBP image up to 5 MB.');
+    if (
+      !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
+      file.size > 5 * 1024 * 1024
+    ) {
+      setMsg("Choose a JPG, PNG, or WEBP image up to 5 MB.");
       return;
     }
     setUploading(true);
-    setMsg('');
+    setMsg("");
     try {
       const body = new FormData();
-      body.append('file', file);
-      const uploaded = await api<{ url: string; publicId: string }>('/admin/media/images', {
-        method: 'POST',
-        body,
-      });
-      setF((current) => ({ ...current, imageUrl: uploaded.url, imagePublicId: uploaded.publicId }));
+      body.append("file", file);
+      const uploaded = await api<{ url: string; publicId: string }>(
+        "/admin/media/images",
+        {
+          method: "POST",
+          body,
+        },
+      );
+      setF((current) => ({
+        ...current,
+        imageUrl: uploaded.url,
+        imagePublicId: uploaded.publicId,
+      }));
     } catch (error) {
       setMsg((error as Error).message);
     } finally {
@@ -1224,7 +1200,13 @@ function AdminProductForm() {
         />
       </label>
       {uploading && <p className="muted">Uploading image…</p>}
-      {f.imageUrl && <img className="upload-preview" src={f.imageUrl} alt={f.imageAltText || 'Product preview'} />}
+      {f.imageUrl && (
+        <img
+          className="upload-preview"
+          src={f.imageUrl}
+          alt={f.imageAltText || "Product preview"}
+        />
+      )}
       {[
         ["name", "Name"],
         ["description", "Description"],

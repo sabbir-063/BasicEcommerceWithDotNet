@@ -1,9 +1,21 @@
 # Implementation Status
 
+## 2026-09-24 documentation compliance remediation — in progress
+- [x] Work moved to `codex/docs-compliance-remediation` branch.
+- [x] .NET 10 SDK and Node 24 LTS installed; backend projects, EF Core, Npgsql, and EF CLI upgraded to .NET/EF 10.
+- [x] Backend .NET 10 build: zero warnings; 9 unit tests pass.
+- [x] HTTP/PostgreSQL integration project added: 2 tests pass using an isolated schema on the direct development Neon connection. Schema selection is verified before the API starts; the test schema is removed after the suite.
+- [x] Test-harness isolation mistake identified and corrected. Three test users, one test category, one test product, one cart, and one cancelled order created in the development schema were removed by exact ID in a transaction; subsequent audit found no matching records. One empty test schema left by a failed setup was also removed.
+- [x] Frontend dependencies pinned; ESLint TypeScript/React Hooks rules and Prettier check enabled.
+- [x] Shared frontend API client extracted with five tests covering Problem Details, 204, non-JSON failures, 401 cleanup, and multipart uploads.
+- [x] Live .NET 10 API readiness and Vite frontend verified; 2 Playwright customer/admin browser tests pass after these changes.
+- [ ] Broader integration/component/browser acceptance coverage, architecture refactors, validation, UI requirements, and final documentation audit remain.
+- [ ] Docker verification intentionally omitted at the owner's request because Docker Desktop slows the host. Direct `dotnet run` and `npm run dev` are used for browser checks.
+
 ## Foundation
 - [x] Repository structure and secret ignore rules created
 - [x] Layered backend solution and frontend app created
-- [x] Backend/frontend Dockerfiles and root Compose created
+- [x] Backend/frontend Dockerfiles created (no root Compose file is present or required by the current local development guide)
 - [x] Health liveness/readiness endpoints verified
 - [x] Initial EF Core migration generated
 - [~] Migration generated; development Neon schema was created safely during smoke setup, but the existing schema has not been retroactively baselined into `__EFMigrationsHistory`
@@ -35,10 +47,10 @@
 ## Quality gates
 - [x] Backend build: clean, zero warnings
 - [x] Backend unit tests: 9 passed
-- [ ] Disposable PostgreSQL integration suite: not implemented; Docker daemon is unavailable on this host
-- [x] Frontend lint: passed
+- [x] Isolated-schema PostgreSQL HTTP integration suite: 2 scenarios pass against the direct development connection without touching the public schema
+- [x] Frontend lint: passed (the original empty ESLint ruleset has since been replaced by active TypeScript/React Hooks rules)
 - [x] Frontend strict type-check: passed
-- [x] Frontend unit test: 1 passed
+- [x] Frontend tests: original 1 trivial test replaced by 5 API-client behavior tests
 - [x] Frontend production build: passed
 - [x] Playwright real-browser core customer flow: passed
 - [x] Playwright admin authorization/navigation/order lifecycle: passed
@@ -46,7 +58,7 @@
 - [x] Real Cloudinary upload/folder/delete smoke: upload 201, folder valid, delete `ok`
 - [x] Source secret scan: zero matches outside ignored `info.txt`
 - [x] npm high-severity audit: zero vulnerabilities
-- [ ] Docker image/Compose run: blocked because Docker daemon is not running
+- [ ] Docker image/Compose run: intentionally not attempted at the owner's request; local verification uses direct processes
 - [ ] Interactive computer-use browser: unavailable (browser inventory empty); Playwright Chromium used instead
 
 ## Evidence log
