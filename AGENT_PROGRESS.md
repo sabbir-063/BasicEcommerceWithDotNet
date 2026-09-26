@@ -58,11 +58,11 @@ This document acts as the central source of truth for AI agents working on this 
 - [x] Replace inline CSS with Tailwind.
 - [x] Introduce React Hook Form + Zod for forms (Registration, Login, Checkout, Product/Category management).
 
-### ⏳ Phase 8 & 9: Frontend Missing Features & Cloudinary
+### ✅ Phase 8 & 9: Frontend Missing Features & Cloudinary
 - **Branch:** `feature/phase-8-9-ui-cloudinary`
-- [ ] UI refinements: Category filters, stable URL states, loading skeletons, explicit 403/404 pages.
-- [ ] Admin UI: Category edit, product stock updates, order pagination.
-- [ ] Cloudinary backend lifecycle: Validate size/MIME, conditional deletion of old images on product update.
+- [x] UI refinements: Category filters, stable URL states, loading skeletons, explicit 403/404 pages.
+- [x] Admin UI: Category edit, product stock updates, order pagination.
+- [x] Cloudinary backend lifecycle: Validate size/MIME, conditional deletion of old images on product update.
 
 ### ⏳ Phase 10 & 12: E2E Acceptance & Docs Audit
 - **Branch:** `feature/phase-10-12-acceptance-docs`

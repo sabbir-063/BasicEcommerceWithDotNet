@@ -15,13 +15,14 @@ type CategoryForm = z.infer<typeof categorySchema>;
 export default function AdminCategories() {
   const [cats, setCats] = useState<Category[]>([]);
   const [error, setError] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<CategoryForm>({
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, setValue } = useForm<CategoryForm>({
     resolver: zodResolver(categorySchema)
   });
 
   const load = () => {
-    api<Category[]>("/categories")
+    api<Category[]>("/admin/categories")
       .then(setCats)
       .catch((e) => setError(e.message));
   };
@@ -31,15 +32,34 @@ export default function AdminCategories() {
   const submit = async (data: CategoryForm) => {
     setError("");
     try {
-      await api("/admin/categories", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
-      reset();
+      if (editingId) {
+        await api(`/admin/categories/${editingId}`, {
+          method: "PUT",
+          body: JSON.stringify(data),
+        });
+        setEditingId(null);
+      } else {
+        await api("/admin/categories", {
+          method: "POST",
+          body: JSON.stringify(data),
+        });
+      }
+      reset({ name: "" });
       load();
     } catch (e) {
       setError((e as Error).message);
     }
+  };
+
+  const startEdit = (c: Category) => {
+    setEditingId(c.id);
+    setValue("name", c.name);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    reset({ name: "" });
+    setError("");
   };
 
   const toggle = async (id: string, active: boolean) => {
@@ -62,21 +82,26 @@ export default function AdminCategories() {
       
       <div className="flex flex-col md:flex-row gap-8 items-start">
         <form onSubmit={handleSubmit(submit)} className="w-full md:w-1/3 bg-surface p-6 rounded shadow-sm border border-border sticky top-8">
-          <h2 className="text-xl font-bold mb-4">Add Category</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">{editingId ? "Edit Category" : "Add Category"}</h2>
+            {editingId && (
+              <button type="button" onClick={cancelEdit} className="text-sm text-text-muted hover:text-text">Cancel</button>
+            )}
+          </div>
           
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">Name</label>
-            <input {...register("name")} className="input-field" />
+            <input {...register("name")} className="input-field w-full" />
             {errors.name && <p className="text-error text-sm mt-1">{errors.name.message}</p>}
           </div>
           
           <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
-            {isSubmitting ? "Adding..." : "Add category"}
+            {isSubmitting ? "Saving..." : editingId ? "Save Changes" : "Add Category"}
           </button>
         </form>
         
-        <div className="flex-1 bg-surface rounded shadow-sm border border-border overflow-hidden">
-          <table className="w-full text-left border-collapse">
+        <div className="flex-1 bg-surface rounded shadow-sm border border-border overflow-hidden overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[500px]">
             <thead className="bg-gray-50 border-b border-border">
               <tr>
                 <th className="py-3 px-4 font-semibold text-text">Name</th>
@@ -87,7 +112,7 @@ export default function AdminCategories() {
             </thead>
             <tbody className="divide-y divide-border">
               {cats.map((c) => (
-                <tr key={c.id} className="hover:bg-gray-50/50">
+                <tr key={c.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="py-3 px-4 font-medium">{c.name}</td>
                   <td className="py-3 px-4 text-text-muted">{c.slug}</td>
                   <td className="py-3 px-4">
@@ -95,7 +120,13 @@ export default function AdminCategories() {
                       {c.isActive ? "Active" : "Inactive"}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-right">
+                  <td className="py-3 px-4 text-right space-x-3">
+                    <button
+                      onClick={() => startEdit(c)}
+                      className="text-sm font-medium text-primary hover:underline"
+                    >
+                      Edit
+                    </button>
                     <button
                       onClick={() => toggle(c.id, !c.isActive)}
                       className={`text-sm font-medium hover:underline ${c.isActive ? "text-error" : "text-success"}`}

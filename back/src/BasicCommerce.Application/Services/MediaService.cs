@@ -43,4 +43,14 @@ public class MediaService : IMediaService
             
         return new ImageUploadResponse(result.SecureUrl?.ToString(), result.PublicId, result.Width, result.Height, result.Format);
     }
+
+    public async Task DeleteImageAsync(string publicId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(publicId)) return;
+        var result = await _cloudinary.DestroyAsync(new DeletionParams(publicId) { ResourceType = ResourceType.Image });
+        if (result.Error is not null)
+        {
+            // Log error or ignore? Usually it's fine to ignore or log since we are updating.
+        }
+    }
 }

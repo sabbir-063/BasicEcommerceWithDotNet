@@ -5,6 +5,59 @@ import { Product, Page } from "../../utils/types";
 import { money } from "../../utils";
 import { Loading, Banner, Empty } from "../../components/ui";
 
+function StockUpdater({ p, onUpdate }: { p: Product; onUpdate: () => void }) {
+  const [stock, setStock] = useState(p.stockQuantity);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    if (stock === p.stockQuantity) {
+      setEditing(false);
+      return;
+    }
+    setSaving(true);
+    try {
+      await api(`/admin/products/${p.id}/stock`, {
+        method: "PATCH",
+        body: JSON.stringify({ stockQuantity: stock }),
+      });
+      setEditing(false);
+      onUpdate();
+    } catch (e) {
+      alert((e as Error).message);
+      setStock(p.stockQuantity);
+      setEditing(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!editing) {
+    return (
+      <button 
+        className={`font-medium hover:underline flex items-center gap-1 ${p.stockQuantity > 0 ? "text-text" : "text-error"}`}
+        onClick={() => setEditing(true)}
+      >
+        {p.stockQuantity} <span className="text-text-muted text-xs">✎</span>
+      </button>
+    );
+  }
+
+  return (
+    <input 
+      type="number" 
+      min="0"
+      className="input-field py-1 px-2 w-20 text-sm"
+      value={stock}
+      onChange={e => setStock(parseInt(e.target.value) || 0)}
+      onBlur={save}
+      onKeyDown={e => e.key === 'Enter' && save()}
+      autoFocus
+      disabled={saving}
+    />
+  );
+}
+
 export default function AdminProducts() {
   const [params, setParams] = useSearchParams();
   const [data, setData] = useState<Page<Product> | null>(null);
@@ -111,9 +164,7 @@ export default function AdminProducts() {
                       <td className="py-3 px-4 text-text-muted">{p.categoryName}</td>
                       <td className="py-3 px-4 font-medium">{money(p.price)}</td>
                       <td className="py-3 px-4">
-                        <span className={`font-medium ${p.stockQuantity > 0 ? "text-text" : "text-error"}`}>
-                          {p.stockQuantity}
-                        </span>
+                        <StockUpdater p={p} onUpdate={load} />
                       </td>
                       <td className="py-3 px-4">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${p.isActive ? "bg-success/10 text-success" : "bg-gray-100 text-gray-600"}`}>

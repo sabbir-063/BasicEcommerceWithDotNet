@@ -9,10 +9,12 @@ namespace BasicCommerce.Application.Services;
 public class ProductService : IProductService
 {
     private readonly IAppDbContext _db;
+    private readonly IMediaService _media;
 
-    public ProductService(IAppDbContext db)
+    public ProductService(IAppDbContext db, IMediaService media)
     {
         _db = db;
+        _media = media;
     }
 
     public async Task<ProductListResponse> GetProductsAsync(int? page, int? pageSize, string? search, Guid? categoryId, string? sort, CancellationToken ct = default)
@@ -139,6 +141,11 @@ public class ProductService : IProductService
         if (await _db.Categories.FindAsync(new object[] { request.CategoryId }, ct) is null) 
             throw new ValidationException("Category not found.");
             
+        if (!string.IsNullOrWhiteSpace(p.ImagePublicId) && p.ImagePublicId != request.ImagePublicId)
+        {
+            await _media.DeleteImageAsync(p.ImagePublicId, ct);
+        }
+            
         p.CategoryId = request.CategoryId;
         p.Name = request.Name.Trim();
         p.Slug = Slug(request.Name);
@@ -168,10 +175,26 @@ public class ProductService : IProductService
         return new ProductDto(p.Id, p.CategoryId, null, p.Name, p.Slug, p.Description, p.Price, p.StockQuantity, p.ImageUrl, p.ImageAltText, p.IsActive);
     }
 
+    public async Task<ProductDto> UpdateProductStatusAsync(Guid id, StatusRequest request, CancellationToken ct = default)
+    {
+        var p = await _db.Products.FindAsync(new object[] { id }, ct);
+        if (p is null) throw new NotFoundException("Product not found.");
+        
+        p.IsActive = request.IsActive;
+        await _db.SaveChangesAsync(ct);
+        
+        return new ProductDto(p.Id, p.CategoryId, null, p.Name, p.Slug, p.Description, p.Price, p.StockQuantity, p.ImageUrl, p.ImageAltText, p.IsActive);
+    }
+
     public async Task DeleteProductAsync(Guid id, CancellationToken ct = default)
     {
         var p = await _db.Products.FindAsync(new object[] { id }, ct);
         if (p is null) throw new NotFoundException("Product not found.");
+        
+        if (!string.IsNullOrWhiteSpace(p.ImagePublicId))
+        {
+            await _media.DeleteImageAsync(p.ImagePublicId, ct);
+        }
         
         _db.Products.Remove(p);
         await _db.SaveChangesAsync(ct);

@@ -1,20 +1,32 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
-import { Page, Product } from "../utils/types";
-import { Loading, Banner, Empty } from "../components/ui";
+import { Page, Product, Category } from "../utils/types";
+import { Loading, Banner, Empty, ProductSkeleton } from "../components/ui";
 import { ProductCard } from "./Home";
 
 export default function Shop() {
   const [params, setParams] = useSearchParams();
   const [data, setData] = useState<Page<Product> | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api<Category[]>("/categories").then(setCategories).catch(console.error);
+  }, []);
 
   useEffect(() => {
     setError("");
-    api<Page<Product>>(`/products?${params.toString()}`)
-      .then(setData)
-      .catch((e) => setError(e.message));
+    setLoading(true);
+    // Add debounce for search typing
+    const timer = setTimeout(() => {
+      api<Page<Product>>(`/products?${params.toString()}`)
+        .then(setData)
+        .catch((e) => setError(e.message))
+        .finally(() => setLoading(false));
+    }, 300);
+    return () => clearTimeout(timer);
   }, [params]);
 
   const update = (k: string, v: string) => {
@@ -22,7 +34,7 @@ export default function Shop() {
     if (v) n.set(k, v);
     else n.delete(k);
     n.delete("page");
-    setParams(n);
+    setParams(n, { replace: true });
   };
 
   return (
@@ -37,14 +49,25 @@ export default function Shop() {
         </Link>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 mb-8 bg-surface p-4 rounded border border-border shadow-sm">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-4 mb-8 bg-surface p-4 rounded border border-border shadow-sm">
         <input
-          className="input-field flex-1"
+          className="input-field flex-1 min-w-[200px]"
           aria-label="Search products"
           placeholder="Search products"
           value={params.get("search") || ""}
           onChange={(e) => update("search", e.target.value)}
         />
+        <select
+          className="input-field sm:w-48"
+          aria-label="Category filter"
+          value={params.get("categoryId") || ""}
+          onChange={(e) => update("categoryId", e.target.value)}
+        >
+          <option value="">All Categories</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
         <select
           className="input-field sm:w-48"
           aria-label="Sort"
@@ -56,19 +79,24 @@ export default function Shop() {
           <option value="price_desc">Price: high to low</option>
           <option value="name_asc">Name</option>
         </select>
-        <button className="px-4 py-2 text-text-muted hover:text-text hover:bg-gray-100 rounded transition-colors" onClick={() => setParams({})}>
+        <button 
+          className="px-4 py-2 text-text-muted hover:text-text hover:bg-gray-100 rounded transition-colors" 
+          onClick={() => setParams({}, { replace: true })}
+        >
           Clear
         </button>
       </div>
 
       {error && <Banner text={error} />}
 
-      {!data ? (
-        <Loading />
-      ) : data.items.length ? (
+      {loading && !data ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          {Array.from({ length: 6 }).map((_, i) => <ProductSkeleton key={i} />)}
+        </div>
+      ) : data?.items.length ? (
         <>
           <p className="text-text-muted mb-6">{data.totalItems} results</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 ${loading ? 'opacity-50 pointer-events-none' : 'transition-opacity duration-200'}`}>
             {data.items.map((p) => (
               <ProductCard key={p.id} p={p} />
             ))}

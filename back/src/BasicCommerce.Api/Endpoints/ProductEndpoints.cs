@@ -45,6 +45,11 @@ public static class ProductEndpoints
         {
             return Results.Ok(await productService.UpdateProductStockAsync(id, req, ct));
         });
+
+        adminGroup.MapPatch("/{id:guid}/status", async (Guid id, [FromBody] StatusRequest req, [FromServices] IProductService productService, CancellationToken ct) => 
+        {
+            return Results.Ok(await productService.UpdateProductStatusAsync(id, req, ct));
+        });
         
         adminGroup.MapDelete("/{id:guid}", async (Guid id, [FromServices] IProductService productService, CancellationToken ct) => 
         {

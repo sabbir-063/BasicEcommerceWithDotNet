@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import { Page, Product, Category } from "../utils/types";
 import { money } from "../utils";
+import { ProductSkeleton } from "../components/ui";
 
 export function ProductCard({ p }: { p: Product }) {
   return (
@@ -27,8 +28,8 @@ export function ProductCard({ p }: { p: Product }) {
 }
 
 export default function Home() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [cats, setCats] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[] | null>(null);
+  const [cats, setCats] = useState<Category[] | null>(null);
   
   useEffect(() => {
     api<Page<Product>>("/products?pageSize=6").then((x) => setProducts(x.items));
@@ -53,7 +54,11 @@ export default function Home() {
 
       <h2 className="text-2xl font-bold mb-6">Shop by category</h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-        {cats.map((c) => (
+        {!cats ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-surface border border-border rounded p-6 h-[72px] animate-pulse bg-gray-200" />
+          ))
+        ) : cats.map((c) => (
           <Link className="bg-surface border border-border rounded p-6 text-center font-semibold hover:border-primary hover:text-primary transition-colors" key={c.id} to={`/shop?categoryId=${c.id}`}>
             {c.name}
           </Link>
@@ -66,7 +71,9 @@ export default function Home() {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-        {products.map((p) => (
+        {!products ? (
+          Array.from({ length: 3 }).map((_, i) => <ProductSkeleton key={i} />)
+        ) : products.map((p) => (
           <ProductCard key={p.id} p={p} />
         ))}
       </div>

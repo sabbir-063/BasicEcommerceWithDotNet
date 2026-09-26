@@ -13,7 +13,8 @@
 - [x] Frontend component testing with Vitest/RTL added for UI states, auth guards, cart constraints.
 - [x] Architecture refactors (services, application layer), validation, and Database constraints (Phase 3-5) complete.
 - [x] Frontend refactored into modular directories with Tailwind CSS v4 and React Hook Form (Phase 6-7) complete.
-- [ ] UI requirements and final documentation audit remain.
+- [x] UI refinements, Admin features, and Cloudinary lifecycle (Phase 8-9) complete.
+- [ ] Final documentation audit remains.
 - [ ] Docker verification intentionally omitted at the owner's request because Docker Desktop slows the host. Direct `dotnet run` and `npm run dev` are used for browser checks.
 
 ## Foundation
