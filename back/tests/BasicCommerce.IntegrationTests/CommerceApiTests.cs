@@ -283,6 +283,142 @@ public sealed class CommerceApiTests : IClassFixture<IntegrationApplication>
         Assert.Equal(1, await db.OrderItems.CountAsync(item => item.ProductId == productId));
     }
 
+    [Fact]
+    public async Task Invalid_login_returns_unauthorized()
+    {
+        var login = await _client.PostAsJsonAsync("/api/auth/login", new
+        {
+            email = "nonexistent@example.test",
+            password = "WrongPassword123!"
+        });
+        Assert.Equal(HttpStatusCode.Unauthorized, login.StatusCode);
+        Assert.Equal("INVALID_CREDENTIALS", await ReadCodeAsync(login));
+    }
+
+    [Fact]
+    public async Task Cart_full_lifecycle_upsert_update_remove_empty()
+    {
+        var productId1 = await AddProductAsync(stock: 10, price: 100m);
+        var productId2 = await AddProductAsync(stock: 5, price: 200m);
+        var token = await RegisterAndLoginAsync("cart-lifecycle");
+
+        using var add1 = AuthorizedRequest(token, HttpMethod.Post, "/api/cart/items", JsonContent.Create(new { productId = productId1, quantity = 2 }));
+        Assert.Equal(HttpStatusCode.OK, (await _client.SendAsync(add1)).StatusCode);
+
+        using var add1Again = AuthorizedRequest(token, HttpMethod.Post, "/api/cart/items", JsonContent.Create(new { productId = productId1, quantity = 3 }));
+        Assert.Equal(HttpStatusCode.OK, (await _client.SendAsync(add1Again)).StatusCode);
+
+        using var add2 = AuthorizedRequest(token, HttpMethod.Post, "/api/cart/items", JsonContent.Create(new { productId = productId2, quantity = 1 }));
+        Assert.Equal(HttpStatusCode.OK, (await _client.SendAsync(add2)).StatusCode);
+
+        Guid cartItemId1 = Guid.Empty;
+        Guid cartItemId2 = Guid.Empty;
+
+        using (var cart = AuthorizedRequest(token, HttpMethod.Get, "/api/cart"))
+        {
+            var body = await (await _client.SendAsync(cart)).Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal(6, body.GetProperty("itemCount").GetInt32());
+            Assert.Equal(700m, body.GetProperty("totalAmount").GetDecimal()); // (5 * 100) + (1 * 200)
+
+            foreach (var item in body.GetProperty("items").EnumerateArray())
+            {
+                if (item.GetProperty("productId").GetGuid() == productId1) cartItemId1 = item.GetProperty("id").GetGuid();
+                if (item.GetProperty("productId").GetGuid() == productId2) cartItemId2 = item.GetProperty("id").GetGuid();
+            }
+        }
+
+        // Update quantity
+        using var update = AuthorizedRequest(token, HttpMethod.Patch, $"/api/cart/items/{cartItemId1}", JsonContent.Create(new { quantity = 1 }));
+        Assert.Equal(HttpStatusCode.OK, (await _client.SendAsync(update)).StatusCode);
+
+        // Remove item
+        using var remove = AuthorizedRequest(token, HttpMethod.Delete, $"/api/cart/items/{cartItemId2}");
+        Assert.Equal(HttpStatusCode.NoContent, (await _client.SendAsync(remove)).StatusCode);
+
+        // Clear cart
+        using var clear = AuthorizedRequest(token, HttpMethod.Delete, "/api/cart");
+        Assert.Equal(HttpStatusCode.NoContent, (await _client.SendAsync(clear)).StatusCode);
+
+        // Verify empty cart
+        using (var cart = AuthorizedRequest(token, HttpMethod.Get, "/api/cart"))
+        {
+            var body = await (await _client.SendAsync(cart)).Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal(0, body.GetProperty("itemCount").GetInt32());
+        }
+    }
+
+    [Fact]
+    public async Task Checkout_edge_cases_empty_cart_inactive_product_stock_conflict()
+    {
+        var token = await RegisterAndLoginAsync("checkout-edge");
+
+        // 1. Empty cart checkout
+        using (var emptyCheckout = AuthorizedRequest(token, HttpMethod.Post, "/api/orders",
+                   JsonContent.Create(new { customerName = "A", phone = "01", shippingAddress = "B", paymentMethod = "CashOnDelivery" })))
+        {
+            var response = await _client.SendAsync(emptyCheckout);
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Equal("EMPTY_CART", await ReadCodeAsync(response));
+        }
+
+        // 2. Inactive product checkout
+        var inactiveProductId = await AddProductAsync(stock: 10, price: 100m);
+        // Make it active first to add to cart, then deactivate
+        using var add = AuthorizedRequest(token, HttpMethod.Post, "/api/cart/items", JsonContent.Create(new { productId = inactiveProductId, quantity = 1 }));
+        await _client.SendAsync(add);
+
+        // Deactivate via DB
+        await using (var scope = _application.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var p = await db.Products.FindAsync(inactiveProductId);
+            p!.IsActive = false;
+            await db.SaveChangesAsync();
+        }
+
+        using (var inactiveCheckout = AuthorizedRequest(token, HttpMethod.Post, "/api/orders",
+                   JsonContent.Create(new { customerName = "A", phone = "01", shippingAddress = "B", paymentMethod = "CashOnDelivery" })))
+        {
+            var response = await _client.SendAsync(inactiveCheckout);
+            Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+            Assert.Equal("STOCK_CONFLICT", await ReadCodeAsync(response));
+        }
+    }
+
+    [Fact]
+    public async Task Admin_order_transitions_valid_and_invalid()
+    {
+        var productId = await AddProductAsync(stock: 5, price: 100m);
+        var customerToken = await RegisterAndLoginAsync("transition-cust");
+
+        using var add = AuthorizedRequest(customerToken, HttpMethod.Post, "/api/cart/items", JsonContent.Create(new { productId, quantity = 1 }));
+        await _client.SendAsync(add);
+
+        using var checkout = AuthorizedRequest(customerToken, HttpMethod.Post, "/api/orders",
+                   JsonContent.Create(new { customerName = "A", phone = "01", shippingAddress = "B", paymentMethod = "CashOnDelivery" }));
+        var orderResponse = await _client.SendAsync(checkout);
+        var orderId = (await orderResponse.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+
+        var adminEmail = $"admin-trans-{Guid.NewGuid():N}@example.test";
+        await AddAccountAsync(adminEmail, UserRole.Admin, isActive: true);
+        var login = await _client.PostAsJsonAsync("/api/auth/login", new { email = adminEmail, password = "SafePass123!" });
+        var adminToken = (await login.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("accessToken").GetString()!;
+
+        // Valid transition: Pending -> Confirmed
+        using var confirm = AuthorizedRequest(adminToken, HttpMethod.Patch, $"/api/admin/orders/{orderId}/status", JsonContent.Create(new { status = "Confirmed" }));
+        Assert.Equal(HttpStatusCode.OK, (await _client.SendAsync(confirm)).StatusCode);
+
+        // Invalid transition: Confirmed -> Pending
+        using var backToPending = AuthorizedRequest(adminToken, HttpMethod.Patch, $"/api/admin/orders/{orderId}/status", JsonContent.Create(new { status = "Pending" }));
+        var invalidResponse = await _client.SendAsync(backToPending);
+        Assert.Equal(HttpStatusCode.Conflict, invalidResponse.StatusCode);
+        Assert.Equal("INVALID_ORDER_TRANSITION", await ReadCodeAsync(invalidResponse));
+
+        // Valid transition: Confirmed -> Shipped
+        using var ship = AuthorizedRequest(adminToken, HttpMethod.Patch, $"/api/admin/orders/{orderId}/status", JsonContent.Create(new { status = "Shipped" }));
+        Assert.Equal(HttpStatusCode.OK, (await _client.SendAsync(ship)).StatusCode);
+    }
+
     private async Task AddAccountAsync(string email, UserRole role, bool isActive)
     {
         await using var scope = _application.Services.CreateAsyncScope();

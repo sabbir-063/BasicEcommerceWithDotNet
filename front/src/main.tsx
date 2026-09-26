@@ -9,6 +9,7 @@ import {
   useNavigate,
   useParams,
   useSearchParams,
+  useLocation,
 } from "react-router-dom";
 import "./styles.css";
 import { api } from "./api/client";
@@ -19,7 +20,7 @@ function useEffect(effect: () => unknown, dependencies: React.DependencyList) {
   }, dependencies);
 }
 
-type User = {
+export type User = {
   id: string;
   name: string;
   email: string;
@@ -136,7 +137,7 @@ function Header({
     </header>
   );
 }
-function Layout() {
+export function Layout() {
   const { user, setUser } = useAuth();
   const [cartCount, setCartCount] = useState(0);
   const refresh = () =>
@@ -230,7 +231,7 @@ function Layout() {
     </>
   );
 }
-function Guard({
+export function Guard({
   user,
   admin,
   children,
@@ -239,11 +240,12 @@ function Guard({
   admin?: boolean;
   children: React.ReactNode;
 }) {
+  const location = useLocation();
   if (!user)
     return sessionStorage.getItem("token") ? (
       <Loading />
     ) : (
-      <Navigate to="/login" replace />
+      <Navigate to={`/login?returnTo=${encodeURIComponent(location.pathname + location.search)}`} replace />
     );
   if (admin && user.role !== "Admin") return <Navigate to="/403" replace />;
   return <>{children}</>;
@@ -464,11 +466,12 @@ function ProductPage({ onCartChange }: { onCartChange: () => void }) {
     </div>
   );
 }
-function Login({ onLogin }: { onLogin: (u: User) => void }) {
+export function Login({ onLogin }: { onLogin: (u: User) => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const nav = useNavigate();
+  const [params] = useSearchParams();
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -478,7 +481,9 @@ function Login({ onLogin }: { onLogin: (u: User) => void }) {
       });
       sessionStorage.setItem("token", r.accessToken);
       onLogin(r.user);
-      nav(r.user.role === "Admin" ? "/admin" : "/");
+      const returnTo = params.get("returnTo");
+      if (returnTo && returnTo.startsWith("/")) nav(returnTo);
+      else nav(r.user.role === "Admin" ? "/admin" : "/");
     } catch (e) {
       setError((e as Error).message);
     }
@@ -771,7 +776,7 @@ function CartPage({ onChange }: { onChange: () => void }) {
     </>
   );
 }
-function Checkout() {
+export function Checkout() {
   const [cart, setCart] = useState<Cart | null>(null);
   const [f, setF] = useState({
     customerName: "",
@@ -1088,7 +1093,7 @@ function AdminProducts() {
     </>
   );
 }
-function AdminProductForm() {
+export function AdminProductForm() {
   const { id } = useParams();
   const [cats, setCats] = useState<{ id: string; name: string }[]>([]);
   const [f, setF] = useState({
@@ -1258,7 +1263,7 @@ function AdminOrders() {
     </>
   );
 }
-function AdminOrderDetail() {
+export function AdminOrderDetail() {
   const { id } = useParams();
   const [o, setO] = useState<Order | null>(null);
   const load = () => api<Order>(`/admin/orders/${id}`).then(setO);
@@ -1307,14 +1312,14 @@ function AdminOrderDetail() {
     </>
   );
 }
-function Banner({ text }: { text: string }) {
+export function Banner({ text }: { text: string }) {
   return (
     <div className="banner" role="alert">
       {text}
     </div>
   );
 }
-function Empty({ text, action }: { text: string; action?: React.ReactNode }) {
+export function Empty({ text, action }: { text: string; action?: React.ReactNode }) {
   return (
     <div className="empty">
       <p>{text}</p>
@@ -1322,7 +1327,7 @@ function Empty({ text, action }: { text: string; action?: React.ReactNode }) {
     </div>
   );
 }
-function Loading() {
+export function Loading() {
   return <div className="loading">Loading…</div>;
 }
 function NotFound() {
@@ -1335,8 +1340,11 @@ function NotFound() {
     </div>
   );
 }
-createRoot(document.getElementById("root")!).render(
-  <BrowserRouter>
-    <Layout />
-  </BrowserRouter>,
-);
+const root = document.getElementById("root");
+if (root) {
+  createRoot(root).render(
+    <BrowserRouter>
+      <Layout />
+    </BrowserRouter>,
+  );
+}

@@ -9,7 +9,9 @@
 - [x] Frontend dependencies pinned; ESLint TypeScript/React Hooks rules and Prettier check enabled.
 - [x] Shared frontend API client extracted with five tests covering Problem Details, 204, non-JSON failures, 401 cleanup, and multipart uploads.
 - [x] Live .NET 10 API readiness and Vite frontend verified; 2 Playwright customer/admin browser tests pass after these changes.
-- [ ] Broader integration/component/browser acceptance coverage, architecture refactors, validation, UI requirements, and final documentation audit remain.
+- [x] Broader backend integration coverage added (auth, category, product, cart, checkout, admin transitions).
+- [x] Frontend component testing with Vitest/RTL added for UI states, auth guards, cart constraints.
+- [ ] Architecture refactors, validation, UI requirements, and final documentation audit remain.
 - [ ] Docker verification intentionally omitted at the owner's request because Docker Desktop slows the host. Direct `dotnet run` and `npm run dev` are used for browser checks.
 
 ## Foundation

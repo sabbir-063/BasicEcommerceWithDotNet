@@ -21,21 +21,21 @@ This document acts as the central source of truth for AI agents working on this 
 - [x] Establish base `BasicCommerce.IntegrationTests` project with isolated schema setup.
 - [x] Extract shared frontend API client with initial tests.
 
-### 🟡 Phase 1: Build a Meaningful Quality Harness
-- **Branch:** `feature/phase-1-quality-harness` (Active)
+### ✅ Phase 1: Build a Meaningful Quality Harness
+- **Branch:** `feature/phase-1-quality-harness` (Merged to `main`)
 - **Backend Integration Tests:**
-  - [ ] Auth & Profile (Register, login, active/inactive, admin route denial).
-  - [ ] Categories (Create, update, disable, filter).
-  - [ ] Products (Create, update, disable, filter).
-  - [ ] Cart (Ownership, add, upsert, update, remove).
-  - [ ] Checkout & Orders (Success, empty cart, inactive product, stock conflict, price snapshots, cancellation).
-  - [ ] Problem Details response shapes validation.
+  - [x] Auth & Profile (Register, login, active/inactive, admin route denial).
+  - [x] Categories (Create, update, disable, filter).
+  - [x] Products (Create, update, disable, filter).
+  - [x] Cart (Ownership, add, upsert, update, remove).
+  - [x] Checkout & Orders (Success, empty cart, inactive product, stock conflict, price snapshots, cancellation).
+  - [x] Problem Details response shapes validation.
 - **Frontend Component Tests:**
-  - [ ] Setup React Testing Library, user-event, jest-dom, and fetch/MSW mocks.
-  - [ ] Problem Details parsing and non-JSON failures.
-  - [ ] Auth guards, 403 handling, and login return URL.
-  - [ ] Cart quantity constraints & Checkout submission locks.
-  - [ ] Status-action rendering and product edit preservation.
+  - [x] Setup React Testing Library, user-event, jest-dom, and fetch/MSW mocks.
+  - [x] Problem Details parsing and non-JSON failures.
+  - [x] Auth guards, 403 handling, and login return URL.
+  - [x] Cart quantity constraints & Checkout submission locks.
+  - [x] Status-action rendering and product edit preservation.
 
 ### ⏳ Phase 3: Repair Backend Architecture
 - **Branch:** `feature/phase-3-backend-arch`
