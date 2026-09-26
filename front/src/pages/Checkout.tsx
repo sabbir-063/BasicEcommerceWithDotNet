@@ -56,7 +56,7 @@ export default function Checkout() {
   const submit = async (data: CheckoutForm) => {
     setError("");
     try {
-      const o = await api<Order>("/checkout", {
+      const o = await api<Order>("/orders", {
         method: "POST",
         body: JSON.stringify(data),
       });
