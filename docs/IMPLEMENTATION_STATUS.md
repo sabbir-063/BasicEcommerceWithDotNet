@@ -11,7 +11,9 @@
 - [x] Live .NET 10 API readiness and Vite frontend verified; 2 Playwright customer/admin browser tests pass after these changes.
 - [x] Broader backend integration coverage added (auth, category, product, cart, checkout, admin transitions).
 - [x] Frontend component testing with Vitest/RTL added for UI states, auth guards, cart constraints.
-- [ ] Architecture refactors, validation, UI requirements, and final documentation audit remain.
+- [x] Architecture refactors (services, application layer), validation, and Database constraints (Phase 3-5) complete.
+- [x] Frontend refactored into modular directories with Tailwind CSS v4 and React Hook Form (Phase 6-7) complete.
+- [ ] UI requirements and final documentation audit remain.
 - [ ] Docker verification intentionally omitted at the owner's request because Docker Desktop slows the host. Direct `dotnet run` and `npm run dev` are used for browser checks.
 
 ## Foundation
