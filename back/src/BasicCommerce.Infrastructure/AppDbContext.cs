@@ -1,9 +1,12 @@
 using BasicCommerce.Domain;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using BasicCommerce.Application.Contracts;
+using System.Data;
 
 namespace BasicCommerce.Infrastructure;
 
-public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options), IAppDbContext
 {
     public DbSet<User> Users => Set<User>();
     public DbSet<Category> Categories => Set<Category>();
@@ -12,6 +15,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<CartItem> CartItems => Set<CartItem>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+
+    public Task<IDbContextTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
+        => Database.BeginTransactionAsync(isolationLevel, cancellationToken);
 
     protected override void OnModelCreating(ModelBuilder b)
     {

@@ -37,12 +37,12 @@ This document acts as the central source of truth for AI agents working on this 
   - [x] Cart quantity constraints & Checkout submission locks.
   - [x] Status-action rendering and product edit preservation.
 
-### ⏳ Phase 3: Repair Backend Architecture
+### ✅ Phase 3: Repair Backend Architecture
 - **Branch:** `feature/phase-3-backend-arch`
-- [ ] Move EF Core and Cloudinary initialization out of `Program.cs`.
-- [ ] Create Application DTOs, Contracts, and Validation components.
-- [ ] Implement Application Services (Auth, Category, Product, Cart, Checkout, Dashboard).
-- [ ] Group endpoints by feature modules (Minimal APIs).
+- [x] Move EF Core and Cloudinary initialization out of `Program.cs`.
+- [x] Create Application DTOs, Contracts, and Validation components.
+- [x] Implement Application Services (Auth, Category, Product, Cart, Checkout, Dashboard).
+- [x] Group endpoints by feature modules (Minimal APIs).
 
 ### ⏳ Phase 4 & 5: Error Handling & Database Integrity
 - **Branch:** `feature/phase-4-5-data-integrity`
