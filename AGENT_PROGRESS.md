@@ -64,8 +64,8 @@ This document acts as the central source of truth for AI agents working on this 
 - [x] Admin UI: Category edit, product stock updates, order pagination.
 - [x] Cloudinary backend lifecycle: Validate size/MIME, conditional deletion of old images on product update.
 
-### ⏳ Phase 10 & 12: E2E Acceptance & Docs Audit
+### ✅ Phase 10 & 12: E2E Acceptance & Docs Audit
 - **Branch:** `feature/phase-10-12-acceptance-docs`
-- [ ] Split large Playwright tests into repeatable, focused specs.
-- [ ] Final documentation reconciliation (`README.md`, correct instructions).
-- [ ] Definition of Done checklist.
+- [x] Split large Playwright tests into repeatable, focused specs.
+- [x] Final documentation reconciliation (`README.md`, correct instructions).
+- [x] Definition of Done checklist.

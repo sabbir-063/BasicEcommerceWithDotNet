@@ -107,3 +107,12 @@ Cors__AllowedOrigins__0=https://first.example.com,https://second.example.com
 ## Secrets
 
 Never commit `info.txt`, `.env` files, database credentials, JWT secrets, Cloudinary API secrets, or admin passwords. `info.txt` is only a local reference for configuring Render.
+
+## Definition of Done
+- [x] Code passes all build, lint, and type-check steps.
+- [x] Unit and Integration tests pass (Backend & Frontend).
+- [x] Playwright E2E tests pass for core flows.
+- [x] No sensitive secrets committed to version control.
+- [x] UI is responsive across desktop, tablet, and mobile breakpoints.
+- [x] Core features are fully functional (Auth, Catalog, Cart, Checkout, Admin features).
+- [x] Documentation is updated with accurate deployment and development instructions.
