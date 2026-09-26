@@ -3,11 +3,16 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { expect, test, vi, beforeEach } from "vitest";
 import React from "react";
-import { Checkout } from "../main"; // I need to export Checkout and CartPage
+import Checkout from "../pages/Checkout";
 import { api } from "../api/client";
+import { useAuth } from "../hooks/useAuth";
 
 vi.mock("../api/client", () => ({
   api: vi.fn(),
+}));
+
+vi.mock("../hooks/useAuth", () => ({
+  useAuth: vi.fn(),
 }));
 
 beforeEach(() => {
@@ -17,6 +22,11 @@ beforeEach(() => {
 test("Checkout locks submission while busy", async () => {
   const user = userEvent.setup();
   
+  vi.mocked(useAuth).mockReturnValue({
+    user: { id: "1", name: "C", email: "c@c.c", role: "Customer" },
+    refreshCart: vi.fn(),
+  } as any);
+
   vi.mocked(api).mockResolvedValueOnce({
     id: "cart1",
     itemCount: 1,
@@ -48,12 +58,12 @@ test("Checkout locks submission while busy", async () => {
   await user.type(screen.getByLabelText("Phone"), "1234567890");
   await user.type(screen.getByLabelText("Shipping address"), "123 Test St");
 
-  const button = screen.getByRole("button", { name: "Place order" });
+  const button = screen.getByRole("button", { name: "Place Order" });
   await user.click(button);
 
-  // Button should be disabled and say Placing order...
+  // Button should be disabled and say Processing...
   expect(button).toBeDisabled();
-  expect(button).toHaveTextContent("Placing order…");
+  expect(button).toHaveTextContent("Processing...");
 
   // Wait for the mock to resolve
   await waitFor(() => {

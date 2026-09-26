@@ -51,12 +51,12 @@ This document acts as the central source of truth for AI agents working on this 
 - [x] Baseline EF Migrations safely.
 - [x] Add Database Constraints (prices, stock, order totals, atomic stock deductions, missing indexes).
 
-### ⏳ Phase 6 & 7: Frontend Refactor & Tailwind
+### ✅ Phase 6 & 7: Frontend Refactor & Tailwind
 - **Branch:** `feature/phase-6-7-frontend-refactor`
-- [ ] Restructure frontend into `api`, `app`, `components`, `features`, `hooks`, `pages`, `routes`, `styles`, `utils`.
-- [ ] Introduce Tailwind CSS with semantic theme tokens (Background, Surface, Text, Primary, Success, etc.).
-- [ ] Replace inline CSS with Tailwind.
-- [ ] Introduce React Hook Form + Zod for forms (Registration, Login, Checkout, Product/Category management).
+- [x] Restructure frontend into `api`, `app`, `components`, `features`, `hooks`, `pages`, `routes`, `styles`, `utils`.
+- [x] Introduce Tailwind CSS with semantic theme tokens (Background, Surface, Text, Primary, Success, etc.).
+- [x] Replace inline CSS with Tailwind.
+- [x] Introduce React Hook Form + Zod for forms (Registration, Login, Checkout, Product/Category management).
 
 ### ⏳ Phase 8 & 9: Frontend Missing Features & Cloudinary
 - **Branch:** `feature/phase-8-9-ui-cloudinary`

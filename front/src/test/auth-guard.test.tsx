@@ -3,11 +3,18 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { expect, test, vi } from "vitest";
 import React from "react";
-import { Guard, Login, User } from "../main";
+import { Guard } from "../components/Guard";
+import Login from "../pages/auth/Login";
+import { User } from "../utils/types";
 import { api } from "../api/client";
+import { useAuth } from "../hooks/useAuth";
 
 vi.mock("../api/client", () => ({
   api: vi.fn(),
+}));
+
+vi.mock("../hooks/useAuth", () => ({
+  useAuth: vi.fn(),
 }));
 
 function LocationDisplay() {
@@ -16,6 +23,7 @@ function LocationDisplay() {
 }
 
 test("Guard redirects unauthenticated users to login with returnTo", async () => {
+  vi.mocked(useAuth).mockReturnValue({ user: null } as any);
   render(
     <MemoryRouter initialEntries={["/protected?some=value"]}>
       <Routes>
@@ -23,7 +31,7 @@ test("Guard redirects unauthenticated users to login with returnTo", async () =>
         <Route
           path="/protected"
           element={
-            <Guard user={null}>
+            <Guard>
               <div data-testid="protected">Protected Content</div>
             </Guard>
           }
@@ -46,6 +54,7 @@ test("Guard redirects non-admin users to 403 on admin routes", async () => {
     email: "c@test.com",
     role: "Customer",
   };
+  vi.mocked(useAuth).mockReturnValue({ user: customer } as any);
 
   render(
     <MemoryRouter initialEntries={["/admin"]}>
@@ -54,7 +63,7 @@ test("Guard redirects non-admin users to 403 on admin routes", async () => {
         <Route
           path="/admin"
           element={
-            <Guard user={customer} admin>
+            <Guard admin>
               <div data-testid="admin">Admin Content</div>
             </Guard>
           }
@@ -82,13 +91,14 @@ test("Login redirects to returnTo URL on successful login", async () => {
     user: mockUser,
   });
 
-  const onLogin = vi.fn();
+  const setUser = vi.fn();
+  vi.mocked(useAuth).mockReturnValue({ setUser } as any);
 
   render(
     <MemoryRouter initialEntries={["/login?returnTo=%2Fcheckout"]}>
       <Routes>
         <Route path="/checkout" element={<div data-testid="checkout">Checkout</div>} />
-        <Route path="/login" element={<Login onLogin={onLogin} />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
     </MemoryRouter>
   );
@@ -98,6 +108,7 @@ test("Login redirects to returnTo URL on successful login", async () => {
   await user.click(screen.getByRole("button", { name: "Sign in" }));
 
   await waitFor(() => {
+    expect(setUser).toHaveBeenCalledWith(mockUser);
     expect(screen.getByTestId("checkout")).toBeInTheDocument();
   });
 });

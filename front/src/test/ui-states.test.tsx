@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { expect, test } from "vitest";
 import React from "react";
-import { Loading, Empty, Banner } from "../main"; // need to export them
+import { Loading, Empty, Banner } from "../components/ui";
 
 test("Loading renders a spinner", () => {
   render(<Loading />);
